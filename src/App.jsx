@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   BarChart3,
   Check,
-  ChevronDown,
   ChevronRight,
   Clock3,
   Compass,
@@ -15,6 +14,16 @@ import {
   Sparkles,
   Target
 } from "lucide-react";
+
+const categories = [
+  { id: "project", label: "Проект", hint: "запустить MVP или новый сайт" },
+  { id: "business", label: "Бизнес", hint: "открыть бизнес или проверить идею" },
+  { id: "travel", label: "Переезд", hint: "переехать без хаоса" },
+  { id: "habit", label: "Привычка", hint: "закрепить новую привычку" },
+  { id: "marketing", label: "Маркетинг", hint: "найти канал продвижения" },
+  { id: "career", label: "Карьера", hint: "сменить профессию или найти работу" },
+  { id: "other", label: "Другое", hint: "опиши любую задачу своими словами" }
+];
 
 const templates = [
   {
@@ -379,6 +388,7 @@ function riskTone(value) {
 
 function App() {
   const [templateId, setTemplateId] = useState(templates[0].id);
+  const [categoryId, setCategoryId] = useState(categories[0].id);
   const [customGoal, setCustomGoal] = useState("");
   const [steps, setSteps] = useState(templates[0].steps);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -416,15 +426,6 @@ function App() {
   const activeStep = chartData[activeIndex] ?? chartData[0];
   const maxTime = Math.max(...steps.map((step) => step.time), 1);
 
-  function selectTemplate(nextId) {
-    const nextTemplate = templates.find((template) => template.id === nextId) ?? templates[0];
-    setTemplateId(nextId);
-    setSteps(nextTemplate.steps);
-    setCustomGoal("");
-    setAiDescription("");
-    setActiveIndex(0);
-  }
-
   function updateStep(index, patch) {
     setSteps((current) =>
       current.map((step, stepIndex) => (stepIndex === index ? { ...step, ...patch } : step))
@@ -449,12 +450,14 @@ function App() {
     setAiGoal("");
     setAiDescription("");
     setAiMessage("");
+    setCategoryId(categories[0].id);
     setActiveIndex(0);
     setLimits({ time: 30, budget: 12, strictness: 55 });
   }
 
   async function generateAiPlan() {
     const goal = (aiGoal || customGoal || selectedTemplate.goal).trim();
+    const category = categories.find((item) => item.id === categoryId) ?? categories[0];
 
     if (!goal) {
       setAiMessage("Напиши цель, чтобы ИИ собрал план.");
@@ -468,7 +471,7 @@ function App() {
       const response = await fetch("/api/generate-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal, limits })
+        body: JSON.stringify({ goal, category: category.label, categoryHint: category.hint, limits })
       });
       const data = await response.json();
 
@@ -497,6 +500,7 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           goal: customGoal || selectedTemplate.goal,
+          category: categories.find((item) => item.id === categoryId)?.label,
           step: activeStep
         })
       });
@@ -521,7 +525,7 @@ function App() {
   return (
     <main className="app-shell">
       <section className="workspace">
-        <aside className="sidebar" aria-label="Настройки сценария">
+        <aside className="sidebar" aria-label="Параметры плана">
           <div className="brand">
             <div className="brand-mark" aria-hidden="true">
               <Layers3 size={22} />
@@ -532,44 +536,9 @@ function App() {
             </div>
           </div>
 
-          <div className="control-group">
-            <label htmlFor="scenario">Сценарий</label>
-            <div className="select-wrap">
-              <select id="scenario" value={templateId} onChange={(event) => selectTemplate(event.target.value)}>
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={20} aria-hidden="true" />
-            </div>
-          </div>
-
-          <div className="control-group">
-            <label htmlFor="goal">Цель</label>
-            <input
-              id="goal"
-              value={customGoal}
-              onChange={(event) => setCustomGoal(event.target.value)}
-              placeholder={selectedTemplate.goal}
-            />
-          </div>
-
-          <div className="ai-panel">
-            <div className="ai-panel-title">
-              <Sparkles size={17} />
-              <span>ИИ-план</span>
-            </div>
-            <textarea
-              value={aiGoal}
-              onChange={(event) => setAiGoal(event.target.value)}
-              placeholder="Например: хочу открыть кофейню возле университета"
-            />
-            <button type="button" className="ai-button" onClick={generateAiPlan} disabled={aiBusy === "plan"}>
-              {aiBusy === "plan" ? "Генерирую..." : "Сгенерировать план"}
-            </button>
-            {aiMessage && <p className="ai-message">{aiMessage}</p>}
+          <div className="sidebar-heading">
+            <span>Параметры оценки</span>
+            <p>Настрой рамки, и диаграммы пересчитают нагрузку плана.</p>
           </div>
 
           <div className="sliders">
@@ -605,6 +574,12 @@ function App() {
             <p>Чем меньше запас времени и бюджета, тем жестче подсветка минусов в диаграммах.</p>
           </div>
 
+          <div className="sidebar-current">
+            <span>Текущий шаг</span>
+            <strong>{activeStep.title}</strong>
+            <p>{activeStep.adjustedRisk}% минусов · {activeStep.time} дн. · сложность {activeStep.complexity}</p>
+          </div>
+
           <div className="sidebar-actions">
             <button type="button" className="icon-button" onClick={addStep} aria-label="Добавить шаг" title="Добавить шаг">
               <Plus size={18} />
@@ -632,24 +607,56 @@ function App() {
         </aside>
 
         <section className="main-panel">
-          <header className="topline">
-            <div>
+          <header className="planner-hero">
+            <div className="hero-content">
               <p className="eyebrow">
-                <Compass size={16} />
-                последовательность действий
+                <Sparkles size={16} />
+                ИИ-планировщик
               </p>
-              <h1>{customGoal || selectedTemplate.goal}</h1>
-              <p>{aiDescription || selectedTemplate.description}</p>
+              <h1>{customGoal || "Собери план действий"}</h1>
+              <p>{aiDescription || "Опиши задачу простыми словами, выбери направление, а ИИ соберет шаги, минусы и диаграммы риска."}</p>
+
+              <div className="ai-composer">
+                <div className="category-tabs" aria-label="Категория плана">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      className={category.id === categoryId ? "active" : ""}
+                      onClick={() => setCategoryId(category.id)}
+                    >
+                      {category.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="prompt-box">
+                  <textarea
+                    value={aiGoal}
+                    onChange={(event) => setAiGoal(event.target.value)}
+                    placeholder={`Например: ${categories.find((item) => item.id === categoryId)?.hint}`}
+                  />
+                  <button type="button" className="ai-button" onClick={generateAiPlan} disabled={aiBusy === "plan"}>
+                    <Sparkles size={18} />
+                    {aiBusy === "plan" ? "Генерирую..." : "Сгенерировать"}
+                  </button>
+                </div>
+
+                {aiMessage && <p className="ai-message">{aiMessage}</p>}
+              </div>
+            </div>
+
+            <div className="hero-aside">
               <div className="hero-status">
                 <span className={`pulse-dot ${riskTone(totals.pressure)}`} />
                 <strong>{riskLabel(totals.pressure)}</strong>
-                <span>оценка нагрузки по текущим ограничениям</span>
+                <span>нагрузка плана</span>
               </div>
-            </div>
-            <div className="summary-grid">
-              <Metric icon={<Clock3 size={18} />} label="Время" value={`${totals.totalTime} дн.`} tone="time" />
-              <Metric icon={<BarChart3 size={18} />} label="Риск" value={`${totals.averageRisk}%`} tone="risk" />
-              <Metric icon={<Target size={18} />} label="Давление" value={`${totals.pressure}%`} tone="pressure" />
+              <div className="summary-grid">
+                <Metric icon={<Clock3 size={18} />} label="Время" value={`${totals.totalTime} дн.`} tone="time" />
+                <Metric icon={<BarChart3 size={18} />} label="Риск" value={`${totals.averageRisk}%`} tone="risk" />
+                <Metric icon={<Target size={18} />} label="Давление" value={`${totals.pressure}%`} tone="pressure" />
+              </div>
             </div>
           </header>
 

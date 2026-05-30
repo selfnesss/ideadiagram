@@ -61,7 +61,7 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      const plan = await generatePlan(goal, body.limits);
+      const plan = await generatePlan(goal, body.limits, body.category, body.categoryHint);
       sendJson(response, 200, plan);
       return;
     }
@@ -91,7 +91,7 @@ server.listen(port, "127.0.0.1", () => {
   console.log(`AI API ready on http://127.0.0.1:${port}`);
 });
 
-async function generatePlan(goal, limits = {}) {
+async function generatePlan(goal, limits = {}, category = "", categoryHint = "") {
   const response = await openai.responses.parse({
     model,
     instructions: [
@@ -106,6 +106,8 @@ async function generatePlan(goal, limits = {}) {
         role: "user",
         content: [
           `Цель пользователя: ${goal}`,
+          `Категория: ${category || "не указана"}`,
+          `Подсказка категории: ${categoryHint || "не указана"}`,
           `Ограничения: дней ${limits.time ?? "не указано"}, бюджет ${limits.budget ?? "не указано"}, строгость оценки ${limits.strictness ?? "не указано"}.`,
           "Сделай 4-7 последовательных шагов. Каждый шаг должен быть выполнимым и проверяемым."
         ].join("\n")
