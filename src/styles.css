@@ -204,36 +204,6 @@ textarea:focus {
   box-shadow: 0 20px 54px rgba(35, 49, 43, 0.12);
 }
 
-.category-tabs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
-  gap: 7px;
-}
-
-.category-tabs button {
-  min-height: 34px;
-  padding: 0 9px;
-  border: 1px solid rgba(31, 111, 95, 0.14);
-  border-radius: 8px;
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.82);
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
-}
-
-.category-tabs button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(31, 111, 95, 0.28);
-}
-
-.category-tabs button.active {
-  border-color: rgba(31, 111, 95, 0.38);
-  color: #ffffff;
-  background: var(--green);
-}
-
 .prompt-box {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -304,6 +274,13 @@ textarea:focus {
   margin-left: auto;
   color: var(--ink);
   font-size: 14px;
+}
+
+.money-control input[type="number"] {
+  min-height: 36px;
+  padding: 0 10px;
+  border-color: rgba(31, 111, 95, 0.16);
+  font-weight: 800;
 }
 
 input[type="range"] {
@@ -744,18 +721,22 @@ h2 {
 }
 
 .bar-track {
+  position: relative;
   height: 16px;
   overflow: hidden;
   border-radius: 999px;
-  background: #e5e7df;
+  background:
+    linear-gradient(90deg, var(--green) 0%, var(--gold) 58%, var(--red) 100%);
   box-shadow: inset 0 1px 2px rgba(23, 33, 29, 0.12);
 }
 
-.bar-fill {
+.bar-mask {
+  position: absolute;
+  top: 0;
+  right: 0;
   height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--green), var(--gold) 58%, var(--red));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+  border-radius: 0 999px 999px 0;
+  background: #e5e7df;
 }
 
 .load-chart {
@@ -881,6 +862,32 @@ h2 {
   border-radius: 8px;
   border: 1px solid rgba(23, 33, 29, 0.06);
   background: linear-gradient(135deg, rgba(239, 246, 241, 0.82), rgba(249, 246, 239, 0.9));
+}
+
+.budget-readout {
+  display: grid;
+  gap: 9px;
+}
+
+.budget-readout span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4f5d56;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.budget-readout strong {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(31, 111, 95, 0.12);
+  border-radius: 8px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
 }
 
 .cons-list {
