@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   BarChart3,
   Check,
+  ChevronDown,
   ChevronRight,
   Clock3,
   Compass,
@@ -174,6 +175,165 @@ const templates = [
         cons: ["награда может отвлечь от цели", "внешняя мотивация не всегда держится долго"]
       }
     ]
+  },
+  {
+    id: "business",
+    name: "Открытие бизнеса",
+    description: "План запуска малого дела с проверкой спроса, расходами и первыми продажами.",
+    goal: "Открыть бизнес без лишних рисков",
+    steps: [
+      {
+        title: "Проверить спрос",
+        action: "Описать клиента, проблему и провести 10 коротких разговоров с потенциальными покупателями.",
+        risk: 58,
+        time: 7,
+        cost: 1,
+        complexity: 4,
+        cons: ["часть людей будет отвечать вежливо, но не покупать", "можно ошибиться с сегментом"]
+      },
+      {
+        title: "Посчитать экономику",
+        action: "Собрать стартовые расходы, цену, маржу и точку окупаемости.",
+        risk: 66,
+        time: 4,
+        cost: 2,
+        complexity: 5,
+        cons: ["часть расходов всплывет позже", "оптимистичный прогноз легко обманет"]
+      },
+      {
+        title: "Сделать тестовое предложение",
+        action: "Запустить простую страницу или объявление и собрать первые заявки.",
+        risk: 61,
+        time: 5,
+        cost: 3,
+        complexity: 4,
+        cons: ["реклама может не окупиться сразу", "нужны быстрые правки по реакции рынка"]
+      },
+      {
+        title: "Настроить процессы",
+        action: "Описать закупки, доставку, оплату, поддержку и контроль качества.",
+        risk: 72,
+        time: 10,
+        cost: 4,
+        complexity: 7,
+        cons: ["операционка быстро съест время", "без регламентов качество будет плавать"]
+      },
+      {
+        title: "Запустить продажи",
+        action: "Собрать первую партию клиентов и измерить повторные покупки.",
+        risk: 76,
+        time: 14,
+        cost: 5,
+        complexity: 6,
+        cons: ["первые продажи нестабильны", "может потребоваться менять оффер"]
+      }
+    ]
+  },
+  {
+    id: "travel",
+    name: "Переезд",
+    description: "Последовательность для переезда: документы, деньги, жилье, работа и адаптация.",
+    goal: "Переехать без хаоса",
+    steps: [
+      {
+        title: "Выбрать город",
+        action: "Сравнить стоимость жизни, работу, климат, транспорт и безопасность.",
+        risk: 45,
+        time: 3,
+        cost: 1,
+        complexity: 3,
+        cons: ["по отзывам сложно понять реальную жизнь", "приоритеты семьи могут отличаться"]
+      },
+      {
+        title: "Подготовить документы",
+        action: "Собрать список требований и проверить сроки оформления.",
+        risk: 70,
+        time: 14,
+        cost: 2,
+        complexity: 6,
+        cons: ["сроки могут затянуться", "ошибка в документе ломает план"]
+      },
+      {
+        title: "Посчитать бюджет",
+        action: "Сложить аренду, депозит, дорогу, быт и запас на первые месяцы.",
+        risk: 63,
+        time: 2,
+        cost: 5,
+        complexity: 4,
+        cons: ["легко забыть мелкие расходы", "курс и цены могут измениться"]
+      },
+      {
+        title: "Найти жилье",
+        action: "Отобрать районы, проверить объявления и подготовить вопросы арендодателю.",
+        risk: 68,
+        time: 10,
+        cost: 4,
+        complexity: 5,
+        cons: ["хорошие варианты быстро уходят", "фото не всегда совпадают с реальностью"]
+      },
+      {
+        title: "Собрать план адаптации",
+        action: "Наметить первые дела: связь, транспорт, медицина, школа, окружение.",
+        risk: 49,
+        time: 7,
+        cost: 2,
+        complexity: 4,
+        cons: ["адаптация займет больше сил, чем кажется", "часть задач появится только на месте"]
+      }
+    ]
+  },
+  {
+    id: "marketing",
+    name: "Продвижение продукта",
+    description: "План маркетинга с проверкой каналов, контента, бюджета и конверсий.",
+    goal: "Найти рабочий канал продаж",
+    steps: [
+      {
+        title: "Сформулировать оффер",
+        action: "Описать выгоду, доказательства, цену и главное возражение клиента.",
+        risk: 52,
+        time: 2,
+        cost: 1,
+        complexity: 3,
+        cons: ["оффер может быть понятен команде, но не клиенту", "нужны реальные доказательства"]
+      },
+      {
+        title: "Выбрать каналы",
+        action: "Сравнить рекламу, контент, партнерства и прямые продажи по скорости проверки.",
+        risk: 57,
+        time: 3,
+        cost: 2,
+        complexity: 4,
+        cons: ["слишком много каналов распылит бюджет", "не все каналы подходят аудитории"]
+      },
+      {
+        title: "Собрать креативы",
+        action: "Подготовить 3-5 вариантов сообщений и визуалов для теста.",
+        risk: 61,
+        time: 5,
+        cost: 2,
+        complexity: 5,
+        cons: ["креативы быстро выгорают", "слабый текст испортит хороший продукт"]
+      },
+      {
+        title: "Запустить тест",
+        action: "Поставить ограниченный бюджет и измерить клики, заявки, цену лида.",
+        risk: 74,
+        time: 7,
+        cost: 5,
+        complexity: 6,
+        cons: ["данных может быть мало", "первые результаты часто шумные"]
+      },
+      {
+        title: "Усилить победителя",
+        action: "Оставить лучший канал, улучшить слабые места и поднять бюджет постепенно.",
+        risk: 67,
+        time: 10,
+        cost: 5,
+        complexity: 6,
+        cons: ["масштабирование может сломать экономику", "конкуренты быстро копируют удачные ходы"]
+      }
+    ]
   }
 ];
 
@@ -186,6 +346,20 @@ const emptyStep = {
   complexity: 3,
   cons: ["есть неопределенность", "нужна проверка на практике"]
 };
+
+function normalizeStep(step) {
+  return {
+    title: String(step.title || "Новый шаг").slice(0, 80),
+    action: String(step.action || "Опишите действие, которое приблизит к цели.").slice(0, 360),
+    risk: clamp(step.risk ?? 45, 0, 100),
+    time: clamp(step.time ?? 3, 1, 60),
+    cost: clamp(step.cost ?? 2, 0, 9),
+    complexity: clamp(step.complexity ?? 3, 1, 9),
+    cons: Array.isArray(step.cons) && step.cons.length
+      ? step.cons.slice(0, 4).map((con) => String(con).slice(0, 120))
+      : ["есть неопределенность", "нужна проверка на практике"]
+  };
+}
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, Number(value)));
@@ -209,6 +383,10 @@ function App() {
   const [steps, setSteps] = useState(templates[0].steps);
   const [activeIndex, setActiveIndex] = useState(0);
   const [limits, setLimits] = useState({ time: 30, budget: 12, strictness: 55 });
+  const [aiGoal, setAiGoal] = useState("");
+  const [aiDescription, setAiDescription] = useState("");
+  const [aiBusy, setAiBusy] = useState("");
+  const [aiMessage, setAiMessage] = useState("");
 
   const selectedTemplate = templates.find((template) => template.id === templateId) ?? templates[0];
 
@@ -243,6 +421,7 @@ function App() {
     setTemplateId(nextId);
     setSteps(nextTemplate.steps);
     setCustomGoal("");
+    setAiDescription("");
     setActiveIndex(0);
   }
 
@@ -257,11 +436,86 @@ function App() {
     setActiveIndex(steps.length);
   }
 
+  function removeStep() {
+    if (steps.length <= 1) return;
+
+    setSteps((current) => current.filter((_, index) => index !== activeIndex));
+    setActiveIndex((current) => Math.max(0, Math.min(current - 1, steps.length - 2)));
+  }
+
   function resetScenario() {
     setSteps(selectedTemplate.steps);
     setCustomGoal("");
+    setAiGoal("");
+    setAiDescription("");
+    setAiMessage("");
     setActiveIndex(0);
     setLimits({ time: 30, budget: 12, strictness: 55 });
+  }
+
+  async function generateAiPlan() {
+    const goal = (aiGoal || customGoal || selectedTemplate.goal).trim();
+
+    if (!goal) {
+      setAiMessage("Напиши цель, чтобы ИИ собрал план.");
+      return;
+    }
+
+    setAiBusy("plan");
+    setAiMessage("");
+
+    try {
+      const response = await fetch("/api/generate-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goal, limits })
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Не получилось сгенерировать план.");
+
+      setCustomGoal(data.goal);
+      setAiGoal(data.goal);
+      setAiDescription(data.description);
+      setSteps(data.steps.map(normalizeStep));
+      setActiveIndex(0);
+      setAiMessage("План сгенерирован. Можно редактировать шаги вручную.");
+    } catch (error) {
+      setAiMessage(error.message);
+    } finally {
+      setAiBusy("");
+    }
+  }
+
+  async function analyzeActiveStep() {
+    setAiBusy("step");
+    setAiMessage("");
+
+    try {
+      const response = await fetch("/api/analyze-step", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goal: customGoal || selectedTemplate.goal,
+          step: activeStep
+        })
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Не получилось найти минусы.");
+
+      updateStep(activeStep.index, {
+        action: data.action,
+        risk: data.risk,
+        complexity: data.complexity,
+        cons: data.cons
+      });
+      setAiMessage("Минусы активного шага обновлены.");
+    } catch (error) {
+      setAiMessage(error.message);
+    } finally {
+      setAiBusy("");
+    }
   }
 
   return (
@@ -280,13 +534,16 @@ function App() {
 
           <div className="control-group">
             <label htmlFor="scenario">Сценарий</label>
-            <select id="scenario" value={templateId} onChange={(event) => selectTemplate(event.target.value)}>
-              {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
-                </option>
-              ))}
-            </select>
+            <div className="select-wrap">
+              <select id="scenario" value={templateId} onChange={(event) => selectTemplate(event.target.value)}>
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={20} aria-hidden="true" />
+            </div>
           </div>
 
           <div className="control-group">
@@ -297,6 +554,22 @@ function App() {
               onChange={(event) => setCustomGoal(event.target.value)}
               placeholder={selectedTemplate.goal}
             />
+          </div>
+
+          <div className="ai-panel">
+            <div className="ai-panel-title">
+              <Sparkles size={17} />
+              <span>ИИ-план</span>
+            </div>
+            <textarea
+              value={aiGoal}
+              onChange={(event) => setAiGoal(event.target.value)}
+              placeholder="Например: хочу открыть кофейню возле университета"
+            />
+            <button type="button" className="ai-button" onClick={generateAiPlan} disabled={aiBusy === "plan"}>
+              {aiBusy === "plan" ? "Генерирую..." : "Сгенерировать план"}
+            </button>
+            {aiMessage && <p className="ai-message">{aiMessage}</p>}
           </div>
 
           <div className="sliders">
@@ -339,6 +612,16 @@ function App() {
             <button
               type="button"
               className="icon-button"
+              onClick={removeStep}
+              disabled={steps.length <= 1}
+              aria-label="Удалить шаг"
+              title="Удалить шаг"
+            >
+              <Minus size={18} />
+            </button>
+            <button
+              type="button"
+              className="icon-button"
               onClick={resetScenario}
               aria-label="Сбросить сценарий"
               title="Сбросить сценарий"
@@ -356,7 +639,7 @@ function App() {
                 последовательность действий
               </p>
               <h1>{customGoal || selectedTemplate.goal}</h1>
-              <p>{selectedTemplate.description}</p>
+              <p>{aiDescription || selectedTemplate.description}</p>
               <div className="hero-status">
                 <span className={`pulse-dot ${riskTone(totals.pressure)}`} />
                 <strong>{riskLabel(totals.pressure)}</strong>
@@ -446,6 +729,15 @@ function App() {
                 <Sparkles size={19} />
                 <h2>Шаг {activeStep.index + 1}</h2>
               </div>
+              <button
+                type="button"
+                className="ai-inline-button"
+                onClick={analyzeActiveStep}
+                disabled={aiBusy === "step"}
+              >
+                <Sparkles size={16} />
+                {aiBusy === "step" ? "Ищу минусы..." : "Найти минусы ИИ"}
+              </button>
 
               <div className="edit-grid">
                 <label>
