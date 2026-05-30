@@ -74,6 +74,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-height: calc(100vh - 32px);
   padding: 22px;
   border-radius: 8px;
 }
@@ -388,6 +389,26 @@ input[type="range"] {
 .sidebar-actions {
   display: flex;
   gap: 10px;
+}
+
+.sidebar-contact {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 10px;
+  color: rgba(95, 108, 103, 0.78);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.sidebar-contact a {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar-contact a:hover {
+  color: var(--green);
 }
 
 .sidebar-note span {

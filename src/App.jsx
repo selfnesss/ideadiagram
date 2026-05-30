@@ -604,6 +604,11 @@ function App() {
               <RotateCcw size={18} />
             </button>
           </div>
+
+          <div className="sidebar-contact">
+            <a href="mailto:hello@ideadiagram.app">hello@ideadiagram.app</a>
+            <a href="tel:+79990000000">+7 999 000-00-00</a>
+          </div>
         </aside>
 
         <section className="main-panel">
