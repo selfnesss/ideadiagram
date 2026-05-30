@@ -1,12 +1,13 @@
 import "dotenv/config";
 import http from "node:http";
-import OpenAI from "openai";
+import OpenAICompatibleClient from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
 const port = Number(process.env.PORT ?? 8787);
-const model = process.env.OPENAI_MODEL ?? "gpt-5-mini";
-const apiKey = process.env.OPENAI_API_KEY;
+const model = process.env.POLZA_MODEL ?? "openai/gpt-4o";
+const apiKey = process.env.POLZA_API_KEY;
+const baseURL = process.env.POLZA_BASE_URL ?? "https://polza.ai/api/v1";
 
 const StepSchema = z.object({
   title: z.string().min(3).max(80),
@@ -14,6 +15,7 @@ const StepSchema = z.object({
   risk: z.number().int().min(0).max(100),
   time: z.number().int().min(1).max(60),
   cost: z.number().int().min(0).max(9),
+  budgetLabel: z.string().min(3).max(80),
   complexity: z.number().int().min(1).max(9),
   cons: z.array(z.string().min(6).max(120)).min(2).max(4)
 });
@@ -21,23 +23,38 @@ const StepSchema = z.object({
 const PlanSchema = z.object({
   goal: z.string().min(6).max(120),
   description: z.string().min(20).max(220),
+  summary: z.object({
+    totalTime: z.number().int().min(1).max(365),
+    averageRisk: z.number().int().min(0).max(100),
+    pressure: z.number().int().min(0).max(100)
+  }),
   steps: z.array(StepSchema).min(4).max(7)
+});
+
+const SummarySchema = z.object({
+  totalTime: z.number().int().min(1).max(365),
+  averageRisk: z.number().int().min(0).max(100),
+  pressure: z.number().int().min(0).max(100)
 });
 
 const StepAnalysisSchema = z.object({
   action: z.string().min(12).max(360),
   risk: z.number().int().min(0).max(100),
+  time: z.number().int().min(1).max(60),
+  cost: z.number().int().min(0).max(9),
+  budgetLabel: z.string().min(3).max(80),
   complexity: z.number().int().min(1).max(9),
-  cons: z.array(z.string().min(6).max(120)).min(2).max(4)
+  cons: z.array(z.string().min(6).max(120)).min(2).max(4),
+  summary: SummarySchema
 });
 
-const openai = apiKey ? new OpenAI({ apiKey }) : null;
+const aiClient = apiKey ? new OpenAICompatibleClient({ apiKey, baseURL }) : null;
 
 const server = http.createServer(async (request, response) => {
   response.setHeader("Content-Type", "application/json; charset=utf-8");
 
   if (request.method === "GET" && request.url === "/api/health") {
-    sendJson(response, 200, { ok: true, hasKey: Boolean(apiKey), model });
+    sendJson(response, 200, { ok: true, provider: "polza", hasKey: Boolean(apiKey), model, baseURL });
     return;
   }
 
@@ -47,8 +64,8 @@ const server = http.createServer(async (request, response) => {
   }
 
   try {
-    if (!openai) {
-      sendJson(response, 500, { error: "Добавь OPENAI_API_KEY в .env и перезапусти dev-сервер." });
+    if (!aiClient) {
+      sendJson(response, 500, { error: "Добавь POLZA_API_KEY в .env и перезапусти dev-сервер." });
       return;
     }
 
@@ -61,7 +78,7 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      const plan = await generatePlan(goal, body.limits, body.category, body.categoryHint);
+      const plan = await generatePlan(goal, body.limits);
       sendJson(response, 200, plan);
       return;
     }
@@ -91,14 +108,15 @@ server.listen(port, "127.0.0.1", () => {
   console.log(`AI API ready on http://127.0.0.1:${port}`);
 });
 
-async function generatePlan(goal, limits = {}, category = "", categoryHint = "") {
-  const response = await openai.responses.parse({
+async function generatePlan(goal, limits = {}) {
+  const response = await aiClient.responses.parse({
     model,
     instructions: [
       "Ты продуктовый планировщик для русскоязычного сайта IdeaDiagram.",
       "Верни практичный JSON-план действий: шаги, минусы, риски, время, бюджет и сложность.",
       "Пиши по-русски, конкретно, без воды. Не обещай гарантированный успех.",
-      "Оцени cost как условные единицы от 0 до 9, где 0 почти бесплатно, 9 очень дорого.",
+      "Оцени cost как нагрузку по деньгам от 0 до 9, где 0 почти бесплатно, 9 очень дорого.",
+      "Для каждого шага верни budgetLabel: понятный денежный диапазон в рублях, например 'без затрат', 'до 5 000 ₽', '10 000–20 000 ₽'.",
       "risk — общий риск/минусы шага от 0 до 100. complexity — сложность от 1 до 9."
     ].join(" "),
     input: [
@@ -106,10 +124,10 @@ async function generatePlan(goal, limits = {}, category = "", categoryHint = "")
         role: "user",
         content: [
           `Цель пользователя: ${goal}`,
-          `Категория: ${category || "не указана"}`,
-          `Подсказка категории: ${categoryHint || "не указана"}`,
-          `Ограничения: дней ${limits.time ?? "не указано"}, бюджет ${limits.budget ?? "не указано"}, строгость оценки ${limits.strictness ?? "не указано"}.`,
-          "Сделай 4-7 последовательных шагов. Каждый шаг должен быть выполнимым и проверяемым."
+          `Ограничения: дней ${limits.time ?? "не указано"}, бюджет ${limits.budgetRub ?? limits.budget ?? "не указано"} ₽, строгость оценки ${limits.strictness ?? "не указано"}.`,
+          "Сделай 4-7 последовательных шагов. Каждый шаг должен быть выполнимым и проверяемым.",
+          "Самостоятельно посчитай summary.totalTime, summary.averageRisk и summary.pressure для всего плана.",
+          "summary.pressure — итоговая напряженность плана с учетом ограничений пользователя, от 0 до 100."
         ].join("\n")
       }
     ],
@@ -118,14 +136,19 @@ async function generatePlan(goal, limits = {}, category = "", categoryHint = "")
     }
   });
 
-  return response.output_parsed;
+  const plan = response.output_parsed;
+  const summary = plan.summary ?? await calculateSummaryWithAi(goal, plan.steps, limits);
+
+  return { ...plan, summary };
 }
 
 async function analyzeStep(body) {
   const step = body.step ?? {};
   const goal = String(body.goal ?? "цель не указана").trim();
+  const steps = Array.isArray(body.steps) ? body.steps : [];
+  const limits = body.limits ?? {};
 
-  const response = await openai.responses.parse({
+  const response = await aiClient.responses.parse({
     model,
     instructions: [
       "Ты аналитик рисков для плана действий.",
@@ -140,13 +163,56 @@ async function analyzeStep(body) {
           `Название шага: ${step.title ?? ""}`,
           `Текущее действие: ${step.action ?? ""}`,
           `Текущий риск: ${step.risk ?? ""}`,
+          `Текущее время: ${step.time ?? ""}`,
+          `Текущая денежная нагрузка cost: ${step.cost ?? ""}`,
+          `Текущий бюджет шага: ${step.budgetLabel ?? ""}`,
           `Текущая сложность: ${step.complexity ?? ""}`,
-          "Верни улучшенное действие, 2-4 минуса, риск и сложность."
+          `Все шаги плана: ${JSON.stringify(steps)}`,
+          `Ограничения: дней ${limits.time ?? "не указано"}, бюджет ${limits.budgetRub ?? limits.budget ?? "не указано"} ₽, строгость оценки ${limits.strictness ?? "не указано"}.`,
+          "Верни улучшенное действие, 2-4 минуса, риск, время, cost, budgetLabel и сложность.",
+          "Также пересчитай summary.totalTime, summary.averageRisk и summary.pressure для всего плана после обновления шага."
         ].join("\n")
       }
     ],
     text: {
       format: zodTextFormat(StepAnalysisSchema, "idea_diagram_step_analysis")
+    }
+  });
+
+  const analysis = response.output_parsed;
+  const { summary: returnedSummary, ...stepUpdate } = analysis;
+  const nextSteps = steps.map((item) =>
+    item.title === step.title
+      ? { ...item, ...stepUpdate }
+      : item
+  );
+  const summary = returnedSummary ?? await calculateSummaryWithAi(goal, nextSteps, limits);
+
+  return { ...stepUpdate, summary };
+}
+
+async function calculateSummaryWithAi(goal, steps, limits = {}) {
+  const response = await aiClient.responses.parse({
+    model,
+    instructions: [
+      "Ты аналитик планов для IdeaDiagram.",
+      "Посчитай только итоговые показатели плана.",
+      "totalTime — сумма дней по шагам.",
+      "averageRisk — средний риск шагов от 0 до 100.",
+      "pressure — итоговая напряженность плана от 0 до 100 с учетом ограничений пользователя."
+    ].join(" "),
+    input: [
+      {
+        role: "user",
+        content: [
+          `Цель: ${goal}`,
+          `Шаги: ${JSON.stringify(steps)}`,
+          `Ограничения: дней ${limits.time ?? "не указано"}, бюджет ${limits.budgetRub ?? limits.budget ?? "не указано"} ₽, строгость оценки ${limits.strictness ?? "не указано"}.`
+        ].join("\n")
+      }
+    ],
+    text: {
+      format: zodTextFormat(SummarySchema, "idea_diagram_summary")
     }
   });
 
@@ -184,7 +250,7 @@ function sendJson(response, status, payload) {
 
 function getPublicErrorMessage(error) {
   if (error.status === 401 || error.code === "invalid_api_key") {
-    return "Ключ не принят OpenAI. Нужен действующий API key из platform.openai.com.";
+    return "Ключ Polza не принят. Проверь POLZA_API_KEY в .env.";
   }
 
   if (error.status === 429) {
@@ -192,7 +258,7 @@ function getPublicErrorMessage(error) {
   }
 
   if (error.status === 400 && String(error.message || "").includes("model")) {
-    return "Модель не доступна для этого ключа. Попробуй поменять OPENAI_MODEL в .env.";
+    return "Модель не доступна для этого ключа. Попробуй поменять POLZA_MODEL в .env.";
   }
 
   return "ИИ не ответил. Проверь ключ, модель или попробуй ещё раз.";
