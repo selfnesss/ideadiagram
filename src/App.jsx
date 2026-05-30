@@ -15,16 +15,6 @@ import {
   Target
 } from "lucide-react";
 
-const categories = [
-  { id: "project", label: "Проект", hint: "запустить MVP или новый сайт" },
-  { id: "business", label: "Бизнес", hint: "открыть бизнес или проверить идею" },
-  { id: "travel", label: "Переезд", hint: "переехать без хаоса" },
-  { id: "habit", label: "Привычка", hint: "закрепить новую привычку" },
-  { id: "marketing", label: "Маркетинг", hint: "найти канал продвижения" },
-  { id: "career", label: "Карьера", hint: "сменить профессию или найти работу" },
-  { id: "other", label: "Другое", hint: "опиши любую задачу своими словами" }
-];
-
 const templates = [
   {
     id: "launch",
@@ -352,6 +342,7 @@ const emptyStep = {
   risk: 45,
   time: 3,
   cost: 2,
+  budgetLabel: "до 10 000 ₽",
   complexity: 3,
   cons: ["есть неопределенность", "нужна проверка на практике"]
 };
@@ -363,10 +354,43 @@ function normalizeStep(step) {
     risk: clamp(step.risk ?? 45, 0, 100),
     time: clamp(step.time ?? 3, 1, 60),
     cost: clamp(step.cost ?? 2, 0, 9),
+    budgetLabel: String(step.budgetLabel || getBudgetLabel(step.cost ?? 2)).slice(0, 80),
     complexity: clamp(step.complexity ?? 3, 1, 9),
     cons: Array.isArray(step.cons) && step.cons.length
       ? step.cons.slice(0, 4).map((con) => String(con).slice(0, 120))
       : ["есть неопределенность", "нужна проверка на практике"]
+  };
+}
+
+function createFallbackSummary(steps, limits) {
+  const totalTime = steps.reduce((sum, step) => sum + step.time, 0);
+  const totalCost = steps.reduce((sum, step) => sum + step.cost, 0);
+  const averageRisk = Math.round(steps.reduce((sum, step) => sum + step.risk, 0) / steps.length);
+  const budgetUnits = Math.max(1, limits.budgetRub / 10000);
+  const pressure = Math.round(
+    clamp((totalTime / limits.time) * 38 + (totalCost / budgetUnits) * 34 + (limits.strictness / 100) * 28, 0, 100)
+  );
+
+  return { totalTime, averageRisk, pressure };
+}
+
+function formatRubles(value) {
+  return `${Math.round(value).toLocaleString("ru-RU")} ₽`;
+}
+
+function getBudgetLabel(cost) {
+  if (cost <= 0) return "без затрат";
+  if (cost <= 2) return "до 10 000 ₽";
+  if (cost <= 4) return "10 000–30 000 ₽";
+  if (cost <= 6) return "30 000–70 000 ₽";
+  return "от 70 000 ₽";
+}
+
+function normalizeSummary(summary, fallback) {
+  return {
+    totalTime: clamp(summary?.totalTime ?? fallback.totalTime, 1, 365),
+    averageRisk: clamp(summary?.averageRisk ?? fallback.averageRisk, 0, 100),
+    pressure: clamp(summary?.pressure ?? fallback.pressure, 0, 100)
   };
 }
 
@@ -388,11 +412,11 @@ function riskTone(value) {
 
 function App() {
   const [templateId, setTemplateId] = useState(templates[0].id);
-  const [categoryId, setCategoryId] = useState(categories[0].id);
   const [customGoal, setCustomGoal] = useState("");
-  const [steps, setSteps] = useState(templates[0].steps);
+  const [steps, setSteps] = useState(() => templates[0].steps.map(normalizeStep));
   const [activeIndex, setActiveIndex] = useState(0);
-  const [limits, setLimits] = useState({ time: 30, budget: 12, strictness: 55 });
+  const [limits, setLimits] = useState({ time: 30, budgetRub: 50000, strictness: 55 });
+  const [aiSummary, setAiSummary] = useState(null);
   const [aiGoal, setAiGoal] = useState("");
   const [aiDescription, setAiDescription] = useState("");
   const [aiBusy, setAiBusy] = useState("");
@@ -400,27 +424,17 @@ function App() {
 
   const selectedTemplate = templates.find((template) => template.id === templateId) ?? templates[0];
 
-  const totals = useMemo(() => {
-    const totalTime = steps.reduce((sum, step) => sum + step.time, 0);
-    const totalCost = steps.reduce((sum, step) => sum + step.cost, 0);
-    const averageRisk = Math.round(steps.reduce((sum, step) => sum + step.risk, 0) / steps.length);
-    const pressure = Math.round(
-      clamp((totalTime / limits.time) * 38 + (totalCost / limits.budget) * 34 + (limits.strictness / 100) * 28, 0, 100)
-    );
-
-    return { totalTime, totalCost, averageRisk, pressure };
-  }, [limits, steps]);
+  const fallbackSummary = useMemo(() => createFallbackSummary(steps, limits), [limits, steps]);
+  const totals = aiSummary ?? fallbackSummary;
 
   const chartData = useMemo(
     () =>
       steps.map((step, index) => ({
         ...step,
         index,
-        adjustedRisk: Math.round(
-          clamp(step.risk + (totals.pressure - 50) * 0.35 + step.complexity * 1.8, 0, 100)
-        )
+        adjustedRisk: step.risk
       })),
-    [steps, totals.pressure]
+    [steps]
   );
 
   const activeStep = chartData[activeIndex] ?? chartData[0];
@@ -445,19 +459,18 @@ function App() {
   }
 
   function resetScenario() {
-    setSteps(selectedTemplate.steps);
+    setSteps(selectedTemplate.steps.map(normalizeStep));
     setCustomGoal("");
     setAiGoal("");
     setAiDescription("");
     setAiMessage("");
-    setCategoryId(categories[0].id);
+    setAiSummary(null);
     setActiveIndex(0);
-    setLimits({ time: 30, budget: 12, strictness: 55 });
+    setLimits({ time: 30, budgetRub: 50000, strictness: 55 });
   }
 
   async function generateAiPlan() {
     const goal = (aiGoal || customGoal || selectedTemplate.goal).trim();
-    const category = categories.find((item) => item.id === categoryId) ?? categories[0];
 
     if (!goal) {
       setAiMessage("Напиши цель, чтобы ИИ собрал план.");
@@ -471,7 +484,7 @@ function App() {
       const response = await fetch("/api/generate-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal, category: category.label, categoryHint: category.hint, limits })
+        body: JSON.stringify({ goal, limits })
       });
       const data = await response.json();
 
@@ -480,9 +493,11 @@ function App() {
       setCustomGoal(data.goal);
       setAiGoal(data.goal);
       setAiDescription(data.description);
-      setSteps(data.steps.map(normalizeStep));
+      const nextSteps = data.steps.map(normalizeStep);
+      setSteps(nextSteps);
+      setAiSummary(normalizeSummary(data.summary, createFallbackSummary(nextSteps, limits)));
       setActiveIndex(0);
-      setAiMessage("План сгенерирован. Можно редактировать шаги вручную.");
+      setAiMessage("План и показатели посчитаны ИИ.");
     } catch (error) {
       setAiMessage(error.message);
     } finally {
@@ -500,8 +515,9 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           goal: customGoal || selectedTemplate.goal,
-          category: categories.find((item) => item.id === categoryId)?.label,
-          step: activeStep
+          step: activeStep,
+          steps,
+          limits
         })
       });
       const data = await response.json();
@@ -511,10 +527,13 @@ function App() {
       updateStep(activeStep.index, {
         action: data.action,
         risk: data.risk,
+        time: data.time,
+        cost: data.cost,
         complexity: data.complexity,
         cons: data.cons
       });
-      setAiMessage("Минусы активного шага обновлены.");
+      setAiSummary(normalizeSummary(data.summary, fallbackSummary));
+      setAiMessage("Шаг и показатели пересчитаны ИИ.");
     } catch (error) {
       setAiMessage(error.message);
     } finally {
@@ -538,7 +557,7 @@ function App() {
 
           <div className="sidebar-heading">
             <span>Параметры оценки</span>
-            <p>Настрой рамки, и диаграммы пересчитают нагрузку плана.</p>
+            <p>ИИ учитывает эти рамки при генерации плана и итоговых показателей.</p>
           </div>
 
           <div className="sliders">
@@ -550,13 +569,11 @@ function App() {
               value={limits.time}
               onChange={(value) => setLimits((current) => ({ ...current, time: value }))}
             />
-            <RangeControl
+            <MoneyControl
               icon={<Gauge size={17} />}
-              label="Бюджет"
-              min={3}
-              max={30}
-              value={limits.budget}
-              onChange={(value) => setLimits((current) => ({ ...current, budget: value }))}
+              label="Бюджет, ₽"
+              value={limits.budgetRub}
+              onChange={(value) => setLimits((current) => ({ ...current, budgetRub: value }))}
             />
             <RangeControl
               icon={<AlertTriangle size={17} />}
@@ -571,13 +588,14 @@ function App() {
           <div className="sidebar-note">
             <span>Фокус</span>
             <strong>{riskLabel(totals.pressure)}</strong>
-            <p>Чем меньше запас времени и бюджета, тем жестче подсветка минусов в диаграммах.</p>
+            <p>Итоговая нагрузка плана по оценке ИИ.</p>
           </div>
 
           <div className="sidebar-current">
             <span>Текущий шаг</span>
             <strong>{activeStep.title}</strong>
             <p>{activeStep.adjustedRisk}% минусов · {activeStep.time} дн. · сложность {activeStep.complexity}</p>
+            <p>{activeStep.budgetLabel || getBudgetLabel(activeStep.cost)}</p>
           </div>
 
           <div className="sidebar-actions">
@@ -622,24 +640,11 @@ function App() {
               <p>{aiDescription || "Опиши задачу простыми словами, выбери направление, а ИИ соберет шаги, минусы и диаграммы риска."}</p>
 
               <div className="ai-composer">
-                <div className="category-tabs" aria-label="Категория плана">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      type="button"
-                      className={category.id === categoryId ? "active" : ""}
-                      onClick={() => setCategoryId(category.id)}
-                    >
-                      {category.label}
-                    </button>
-                  ))}
-                </div>
-
                 <div className="prompt-box">
                   <textarea
                     value={aiGoal}
                     onChange={(event) => setAiGoal(event.target.value)}
-                    placeholder={`Например: ${categories.find((item) => item.id === categoryId)?.hint}`}
+                    placeholder="Например: запустить сайт для поиска репетиторов"
                   />
                   <button type="button" className="ai-button" onClick={generateAiPlan} disabled={aiBusy === "plan"}>
                     <Sparkles size={18} />
@@ -699,7 +704,7 @@ function App() {
                   >
                     <span>{step.index + 1}</span>
                     <div className="bar-track">
-                      <div className="bar-fill" style={{ width: `${step.adjustedRisk}%` }} />
+                      <div className="bar-mask" style={{ width: `${100 - step.adjustedRisk}%` }} />
                     </div>
                     <strong>{step.adjustedRisk}%</strong>
                   </button>
@@ -731,7 +736,7 @@ function App() {
               </div>
               <div className="legend">
                 <span><i className="legend-time" /> время</span>
-                <span><i className="legend-cost" /> бюджет</span>
+                <span><i className="legend-cost" /> деньги</span>
                 <span><i className="legend-complexity" /> сложность</span>
               </div>
             </article>
@@ -785,6 +790,13 @@ function App() {
                   value={activeStep.time}
                   onChange={(value) => updateStep(activeStep.index, { time: value })}
                 />
+                <div className="budget-readout">
+                  <span>
+                    <Gauge size={17} />
+                    Деньги
+                  </span>
+                  <strong>{activeStep.budgetLabel || getBudgetLabel(activeStep.cost)}</strong>
+                </div>
                 <RangeControl
                   icon={<Gauge size={17} />}
                   label="Сложность"
@@ -829,6 +841,25 @@ function RangeControl({ icon, label, min, max, value, onChange }) {
         max={max}
         value={value}
         onChange={(event) => onChange(clamp(event.target.value, min, max))}
+      />
+    </label>
+  );
+}
+
+function MoneyControl({ icon, label, value, onChange }) {
+  return (
+    <label className="range-control money-control">
+      <span>
+        {icon}
+        {label}
+        <strong>{formatRubles(value)}</strong>
+      </span>
+      <input
+        type="number"
+        min={0}
+        step={5000}
+        value={value}
+        onChange={(event) => onChange(clamp(event.target.value, 0, 10000000))}
       />
     </label>
   );
