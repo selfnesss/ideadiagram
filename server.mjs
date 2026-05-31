@@ -37,15 +37,8 @@ const SummarySchema = z.object({
   pressure: z.number().int().min(0).max(100)
 });
 
-const StepAnalysisSchema = z.object({
-  action: z.string().min(12).max(360),
-  risk: z.number().int().min(0).max(100),
-  time: z.number().int().min(1).max(60),
-  cost: z.number().int().min(0).max(9),
-  budgetLabel: z.string().min(3).max(80),
-  complexity: z.number().int().min(1).max(9),
-  cons: z.array(z.string().min(6).max(120)).min(2).max(4),
-  summary: SummarySchema
+const StepConsSchema = z.object({
+  cons: z.array(z.string().min(6).max(120)).min(2).max(4)
 });
 
 const aiClient = apiKey ? new OpenAICompatibleClient({ apiKey, baseURL }) : null;
@@ -145,14 +138,14 @@ async function generatePlan(goal, limits = {}) {
 async function analyzeStep(body) {
   const step = body.step ?? {};
   const goal = String(body.goal ?? "цель не указана").trim();
-  const steps = Array.isArray(body.steps) ? body.steps : [];
   const limits = body.limits ?? {};
 
   const response = await aiClient.responses.parse({
     model,
     instructions: [
       "Ты аналитик рисков для плана действий.",
-      "Улучши выбранный шаг: уточни действие, найди реальные минусы, оцени риск и сложность.",
+      "Найди только реальные минусы выбранного шага.",
+      "Не переписывай действие, не пересчитывай риск, время, деньги или сложность.",
       "Пиши по-русски, кратко и прикладно."
     ].join(" "),
     input: [
@@ -167,28 +160,17 @@ async function analyzeStep(body) {
           `Текущая денежная нагрузка cost: ${step.cost ?? ""}`,
           `Текущий бюджет шага: ${step.budgetLabel ?? ""}`,
           `Текущая сложность: ${step.complexity ?? ""}`,
-          `Все шаги плана: ${JSON.stringify(steps)}`,
           `Ограничения: дней ${limits.time ?? "не указано"}, бюджет ${limits.budgetRub ?? limits.budget ?? "не указано"} ₽, строгость оценки ${limits.strictness ?? "не указано"}.`,
-          "Верни улучшенное действие, 2-4 минуса, риск, время, cost, budgetLabel и сложность.",
-          "Также пересчитай summary.totalTime, summary.averageRisk и summary.pressure для всего плана после обновления шага."
+          "Верни 2-4 конкретных минуса этого шага."
         ].join("\n")
       }
     ],
     text: {
-      format: zodTextFormat(StepAnalysisSchema, "idea_diagram_step_analysis")
+      format: zodTextFormat(StepConsSchema, "idea_diagram_step_cons")
     }
   });
 
-  const analysis = response.output_parsed;
-  const { summary: returnedSummary, ...stepUpdate } = analysis;
-  const nextSteps = steps.map((item) =>
-    item.title === step.title
-      ? { ...item, ...stepUpdate }
-      : item
-  );
-  const summary = returnedSummary ?? await calculateSummaryWithAi(goal, nextSteps, limits);
-
-  return { ...stepUpdate, summary };
+  return response.output_parsed;
 }
 
 async function calculateSummaryWithAi(goal, steps, limits = {}) {

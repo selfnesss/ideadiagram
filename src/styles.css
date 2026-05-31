@@ -44,10 +44,7 @@ button {
   min-height: 100vh;
   padding: 20px;
   background:
-    linear-gradient(90deg, rgba(23, 33, 29, 0.035) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(23, 33, 29, 0.035) 1px, transparent 1px),
     linear-gradient(135deg, #edf6f1 0%, #f7f4ed 48%, #edf2f8 100%);
-  background-size: 34px 34px, 34px 34px, auto;
 }
 
 .workspace {
@@ -194,7 +191,7 @@ textarea:focus {
   display: grid;
   gap: 14px;
   max-width: 780px;
-  margin-top: 24px;
+  margin-top: 20px;
   padding: 12px;
   border: 1px solid rgba(23, 33, 29, 0.09);
   border-radius: 8px;
@@ -212,7 +209,7 @@ textarea:focus {
 }
 
 .prompt-box textarea {
-  min-height: 96px;
+  min-height: 82px;
   border-color: rgba(31, 111, 95, 0.16);
   background: rgba(255, 255, 255, 0.9);
   font-size: 15px;
@@ -236,7 +233,7 @@ textarea:focus {
 }
 
 .ai-button {
-  min-width: 176px;
+  min-width: 168px;
   padding: 0 18px;
 }
 
@@ -419,11 +416,11 @@ input[type="range"] {
 .planner-hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(236px, 350px);
-  gap: 26px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(236px, 320px);
+  gap: 22px;
+  align-items: stretch;
   min-width: 0;
-  padding: 30px;
+  padding: 26px;
   overflow: hidden;
   border: 1px solid rgba(23, 33, 29, 0.09);
   border-radius: 8px;
@@ -442,7 +439,9 @@ input[type="range"] {
 
 .hero-aside {
   display: grid;
-  gap: 12px;
+  grid-template-rows: auto 1fr;
+  gap: 7px;
+  height: 100%;
 }
 
 .eyebrow {
@@ -465,8 +464,8 @@ h2 {
 h1 {
   max-width: 760px;
   color: #111915;
-  font-size: clamp(34px, 4.4vw, 64px);
-  line-height: 0.96;
+  font-size: clamp(34px, 4vw, 56px);
+  line-height: 1;
 }
 
 .planner-hero p:not(.eyebrow) {
@@ -484,7 +483,8 @@ h1 {
   gap: 8px;
   width: 100%;
   margin-top: 0;
-  padding: 8px 11px;
+  min-height: 32px;
+  padding: 5px 10px;
   border: 1px solid rgba(23, 33, 29, 0.08);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.68);
@@ -518,16 +518,19 @@ h1 {
 .summary-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 7px;
 }
 
 .metric {
   position: relative;
   display: grid;
-  min-height: 84px;
-  gap: 5px;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  min-height: 62px;
+  gap: 6px;
   align-content: center;
-  padding: 14px 14px 14px 18px;
+  align-items: center;
+  padding: 7px 12px 7px 18px;
   overflow: hidden;
   border: 1px solid rgba(24, 32, 29, 0.08);
   border-radius: 8px;
@@ -551,6 +554,8 @@ h1 {
 }
 
 .metric svg {
+  grid-row: auto;
+  align-self: center;
   color: var(--red);
 }
 
@@ -560,7 +565,9 @@ h1 {
 }
 
 .metric strong {
-  font-size: clamp(20px, 2.1vw, 30px);
+  grid-column: 3;
+  font-size: clamp(18px, 1.5vw, 22px);
+  line-height: 1.05;
 }
 
 .flow-section {
@@ -653,7 +660,7 @@ h1 {
 
 .analysis-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.85fr) minmax(260px, 0.85fr) minmax(340px, 1.2fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
   min-width: 0;
@@ -683,7 +690,7 @@ h2 {
 
 .bar-chart {
   display: grid;
-  gap: 13px;
+  gap: 10px;
 }
 
 .bar-row {
@@ -691,7 +698,7 @@ h2 {
   grid-template-columns: 28px minmax(0, 1fr) 48px;
   align-items: center;
   gap: 10px;
-  min-height: 42px;
+  min-height: 36px;
   padding: 5px;
   border: 0;
   border-radius: 8px;
@@ -703,8 +710,8 @@ h2 {
 
 .bar-row span:first-child {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   place-items: center;
   border-radius: 50%;
   background: var(--green-soft);
@@ -722,7 +729,7 @@ h2 {
 
 .bar-track {
   position: relative;
-  height: 16px;
+  height: 14px;
   overflow: hidden;
   border-radius: 999px;
   background:
@@ -741,9 +748,9 @@ h2 {
 
 .load-chart {
   display: grid;
-  grid-template-columns: repeat(5, minmax(30px, 1fr));
-  gap: 9px;
-  min-height: 222px;
+  grid-template-columns: repeat(auto-fit, minmax(34px, 1fr));
+  gap: 8px;
+  min-height: 190px;
   align-items: end;
   padding-top: 8px;
 }
@@ -764,9 +771,9 @@ h2 {
   align-items: end;
   width: 100%;
   max-width: 72px;
-  height: 190px;
-  gap: 4px;
-  padding: 8px;
+  height: 154px;
+  gap: 3px;
+  padding: 7px;
   border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(242, 240, 232, 0.86)),
@@ -834,6 +841,7 @@ h2 {
 
 .detail-panel {
   display: grid;
+  grid-column: 1 / -1;
   align-content: start;
   gap: 18px;
 }
@@ -936,18 +944,21 @@ h2 {
 @media (max-width: 1280px) {
   .planner-hero {
     grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .hero-aside {
+    grid-template-rows: auto;
+    height: auto;
   }
 
   .hero-aside .summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
   }
 
   .analysis-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .detail-panel {
-    grid-column: 1 / -1;
   }
 }
 
@@ -961,6 +972,7 @@ h2 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
+    min-height: 0;
     max-height: none;
     overflow: visible;
   }
@@ -1001,6 +1013,11 @@ h2 {
   .summary-grid,
   .score-row {
     grid-template-columns: 1fr;
+  }
+
+  .hero-aside .summary-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
   }
 
   .prompt-box {

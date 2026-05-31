@@ -410,6 +410,10 @@ function riskTone(value) {
   return "low";
 }
 
+function loadBarHeight(value, multiplier, min = 10) {
+  return `${clamp(Math.max(min, value * multiplier), min, 100)}%`;
+}
+
 function App() {
   const [templateId, setTemplateId] = useState(templates[0].id);
   const [customGoal, setCustomGoal] = useState("");
@@ -525,15 +529,9 @@ function App() {
       if (!response.ok) throw new Error(data.error || "Не получилось найти минусы.");
 
       updateStep(activeStep.index, {
-        action: data.action,
-        risk: data.risk,
-        time: data.time,
-        cost: data.cost,
-        complexity: data.complexity,
         cons: data.cons
       });
-      setAiSummary(normalizeSummary(data.summary, fallbackSummary));
-      setAiMessage("Шаг и показатели пересчитаны ИИ.");
+      setAiMessage("Минусы обновлены ИИ.");
     } catch (error) {
       setAiMessage(error.message);
     } finally {
@@ -637,7 +635,7 @@ function App() {
                 ИИ-планировщик
               </p>
               <h1>{customGoal || "Собери план действий"}</h1>
-              <p>{aiDescription || "Опиши задачу простыми словами, выбери направление, а ИИ соберет шаги, минусы и диаграммы риска."}</p>
+              <p>{aiDescription || "Опиши задачу простыми словами, а ИИ соберет шаги, минусы и диаграммы риска."}</p>
 
               <div className="ai-composer">
                 <div className="prompt-box">
@@ -717,7 +715,7 @@ function App() {
                 <Gauge size={19} />
                 <h2>Нагрузка шагов</h2>
               </div>
-              <div className="load-chart" aria-label="Сравнение времени, цены и сложности">
+              <div className="load-chart" aria-label="Сравнение времени, денег и сложности">
                 {chartData.map((step) => (
                   <button
                     type="button"
@@ -727,8 +725,8 @@ function App() {
                   >
                     <span className="load-stack">
                       <span className="load-time" style={{ height: `${Math.max(14, (step.time / maxTime) * 100)}%` }} />
-                      <span className="load-cost" style={{ height: `${Math.max(10, step.cost * 13)}%` }} />
-                      <span className="load-complexity" style={{ height: `${Math.max(10, step.complexity * 11)}%` }} />
+                      <span className="load-cost" style={{ height: loadBarHeight(step.cost, 12) }} />
+                      <span className="load-complexity" style={{ height: loadBarHeight(step.complexity, 11) }} />
                     </span>
                     <span>{step.index + 1}</span>
                   </button>
