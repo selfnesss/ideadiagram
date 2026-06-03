@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
   server: {
+    allowedHosts: ["ideadiagram.ru", "www.ideadiagram.ru"],
     proxy: {
       "/api": "http://127.0.0.1:8787"
     }
